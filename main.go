@@ -75,8 +75,8 @@ func (r *InMemoryRepo) findAllBooks() map[string]Book {
 func NewInMemoryRepo() *InMemoryRepo {
 	return &InMemoryRepo{
 		books: map[string]Book{
-			"War and Peace": {"War and Peace", "Tolsztoj"},
-			"Hary Pooter I": {"Hary Pooter I", "J.K."},
+			"War and Peace":  {"War and Peace", "Tolsztoj"},
+			"Harry Potter I": {"Harry Potter I", "J.K."},
 		},
 	}
 }
