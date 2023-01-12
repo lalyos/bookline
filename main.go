@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
@@ -99,6 +101,13 @@ func NewInMemoryRepo() *InMemoryRepo {
 }
 
 func main() {
+	version := flag.Bool("version", false, "prints app version and exits")
+	flag.Parse()
+	if *version {
+		fmt.Println("bookline:", Version)
+		os.Exit(0)
+	}
+
 	r := NewInMemoryRepo()
 	app := &App{
 		repo: r,
