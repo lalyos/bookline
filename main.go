@@ -3,10 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
+
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 func chuck() {
@@ -41,20 +43,48 @@ func (a *App) handleVersion(w http.ResponseWriter, req *http.Request) {
 }
 
 func (a *App) handleListBook(w http.ResponseWriter, req *http.Request) {
-	data, _ := json.Marshal(a.repo.findAllBooks())
+	books := a.repo.findAllBooks()
+	list := []Book{}
+	for _, b := range books {
+		list = append(list, b)
+	}
+	data, _ := json.Marshal(list)
 	fmt.Fprintln(w, string(data))
 }
 
 func (a *App) handleGetBook(w http.ResponseWriter, req *http.Request) {
 	url := req.URL.Path
 	name := strings.TrimPrefix(url, "/api/books/")
+	log.Println("GetBook name:", name)
 	m := a.repo.findAllBooks()
-	b, ok := m[name]
-	if ok {
+
+	if b, ok := m[name]; ok {
 		data, _ := json.Marshal(b)
 		fmt.Fprintln(w, string(data))
 	} else {
-		fmt.Fprintln(w, "NOTFOUND")
+		if req.URL.Query().Has("fuzzy") {
+			log.Println("fuzzy search")
+			titles := []string{}
+			for _, b := range m {
+				titles = append(titles, b.Title)
+			}
+			log.Printf("titles:%#v \n", titles)
+
+			// matches := fuzzy.Find(name, titles)
+			matches := fuzzy.RankFindFold(name, titles)
+			sort.Sort(matches)
+
+			log.Println("fuzzy matches:", matches)
+
+			if len(matches) > 0 {
+				b := m[matches[0].Target]
+				data, _ := json.Marshal(b)
+				fmt.Fprintln(w, string(data))
+				return
+			}
+		}
+		fmt.Fprintln(w, "[]")
+
 	}
 
 }
