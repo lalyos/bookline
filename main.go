@@ -23,6 +23,7 @@ type App struct {
 }
 
 var Version = "0.1.0"
+var GitRev = ""
 
 func (a *App) handleApi(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(w, "api todo ..")
@@ -104,7 +105,7 @@ func main() {
 	version := flag.Bool("version", false, "prints app version and exits")
 	flag.Parse()
 	if *version {
-		fmt.Println("bookline:", Version)
+		fmt.Println("bookline:", Version, "git:", GitRev)
 		os.Exit(0)
 	}
 
