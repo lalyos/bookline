@@ -27,3 +27,18 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
+  prometheus:
+    image: prom/prometheus:v2.12.0
+    volumes:
+        - ./config/prometheus/:/etc/prometheus/
+    command:
+        - '--config.file=/etc/prometheus/prometheus.yaml'
+        - '--storage.tsdb.path=/prometheus'
+        - '--storage.tsdb.retention=200h'
+        - '--web.enable-lifecycle'
+        - '--web.external-url=http://prom.${DOMAIN:-lvh.me}'
+    ports:
+      - 9090
+    labels:
+    - "traefik.frontend.rule=Host:prom.${DOMAIN:-lvh.me}"
+    - "traefik.port=9090"
