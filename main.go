@@ -11,19 +11,6 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
-func chuck() {
-	resp, err := http.Get("https://api.chucknorris.io/jokes/random")
-	if err != nil {
-		log.Fatal(err)
-	}
-	// sc := bufio.NewScanner(resp.Body)
-	// for sc.Scan() {
-	// 	fmt.Println(sc.Text())
-	// }
-	data, _ := io.ReadAll(resp.Body)
-	fmt.Println(string(data))
-}
-
 type Book struct {
 	Title  string
 	Author string
@@ -132,4 +119,5 @@ func main() {
 		fmt.Fprintln(w, "<h2>todo ...</h2>")
 	})
 	http.ListenAndServe(":8888", nil)
+
 }
