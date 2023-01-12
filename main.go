@@ -22,7 +22,7 @@ type App struct {
 	repo Repository
 }
 
-var Version = "1.0.0"
+var Version = "0.1.0"
 
 func (a *App) handleApi(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(w, "api todo ..")
