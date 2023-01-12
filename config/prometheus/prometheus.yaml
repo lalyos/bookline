@@ -11,7 +11,7 @@ scrape_configs:
         - demo.promlabs.com:10000
         - demo.promlabs.com:10001
         - demo.promlabs.com:10002
-# - job_name: bookline
-#   static_configs:
-#     - targets:
-#         - bookline:10000
+- job_name: bookline
+  static_configs:
+    - targets:
+        - bookline:8888

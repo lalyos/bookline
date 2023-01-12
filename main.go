@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type Book struct {
@@ -128,6 +129,7 @@ func main() {
 		w.Header().Add("Content-Type", "text/html;krumpli=9")
 		fmt.Fprintln(w, "<h2>todo ...</h2>")
 	})
+	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":8888", nil)
 
 }
