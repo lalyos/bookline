@@ -123,6 +123,14 @@ func NewInMemoryRepo() *InMemoryRepo {
 	}
 }
 
+// simple middleware
+func logging(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.URL.Path)
+		f(w, r)
+	}
+}
+
 func main() {
 	version := flag.Bool("version", false, "prints app version and exits")
 	flag.Parse()
@@ -139,16 +147,16 @@ func main() {
 	app.met.numOfBooks.Set(float64(len(app.repo.findAllBooks())))
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/books", app.handleListBook) // GET list books
-	mux.HandleFunc("/api/books/", app.handleGetBook) // GET list books
-	// mux.HandleFunc("/api/books/", app.handleApi) // POST create book
-	// mux.HandleFunc("/api/books/", app.handleApi) // DELETE create book
+	mux.HandleFunc("/api/books", logging(app.handleListBook)) // GET list books
+	mux.HandleFunc("/api/books/", logging(app.handleGetBook)) // GET list books
+	// mux.HandleFunc("/api/books/", logging(app.handleApi)) // POST create book
+	// mux.HandleFunc("/api/books/", logging(app.handleApi)) // DELETE create book
 
-	// mux.HandleFunc("/api/authors", app.handleApi) //list authors
-	// mux.HandleFunc("/api/authors/ID", app.handleApi) //list authors
+	// mux.HandleFunc("/api/authors", logging(app.handleApi)) //list authors
+	// mux.HandleFunc("/api/authors/ID", alogging(pp.handleApi)) //list authors
 
-	mux.HandleFunc("/api/", app.handleApi)
-	mux.HandleFunc("/version", app.handleVersion)
+	mux.HandleFunc("/api/", logging(app.handleApi))
+	mux.HandleFunc("/version", logging(app.handleVersion))
 	mux.HandleFunc("/index.html", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Add("Content-Type", "text/html;krumpli=9")
 		fmt.Fprintln(w, "<h2>todo ...</h2>")
