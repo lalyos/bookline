@@ -20,12 +20,12 @@ type Book struct {
 	Author string
 }
 
-type metrics struct {
+type mymetrics struct {
 	numOfBooks prometheus.Gauge
 }
 
-func NewMetrics() *metrics {
-	m := &metrics{
+func NewMetrics() *mymetrics {
+	m := &mymetrics{
 		numOfBooks: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "books_number",
 			Help: "Current number of Books.",
@@ -37,7 +37,7 @@ func NewMetrics() *metrics {
 
 type App struct {
 	repo Repository
-	met  *metrics
+	met  *mymetrics
 }
 
 var Version = "0.1.0"
