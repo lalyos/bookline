@@ -26,6 +26,9 @@ Demo app for golang training.
 - [handle /metrics](https://github.com/lalyos/bookline/commit/4588057)
 - [register simple counter TODO]()
 
+### Grafana
+
+![dashborad](https://user-images.githubusercontent.com/464122/212235480-575cf74c-47c8-430e-a8ef-5ff67bc0d705.png | width=300)
 
 ### Makefile
 
