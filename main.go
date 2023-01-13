@@ -138,21 +138,22 @@ func main() {
 	}
 	app.met.numOfBooks.Set(float64(len(app.repo.findAllBooks())))
 
-	http.HandleFunc("/api/books", app.handleListBook) // GET list books
-	http.HandleFunc("/api/books/", app.handleGetBook) // GET list books
-	// http.HandleFunc("/api/books/", app.handleApi) // POST create book
-	// http.HandleFunc("/api/books/", app.handleApi) // DELETE create book
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/books", app.handleListBook) // GET list books
+	mux.HandleFunc("/api/books/", app.handleGetBook) // GET list books
+	// mux.HandleFunc("/api/books/", app.handleApi) // POST create book
+	// mux.HandleFunc("/api/books/", app.handleApi) // DELETE create book
 
-	// http.HandleFunc("/api/authors", app.handleApi) //list authors
-	// http.HandleFunc("/api/authors/ID", app.handleApi) //list authors
+	// mux.HandleFunc("/api/authors", app.handleApi) //list authors
+	// mux.HandleFunc("/api/authors/ID", app.handleApi) //list authors
 
-	http.HandleFunc("/api/", app.handleApi)
-	http.HandleFunc("/version", app.handleVersion)
-	http.HandleFunc("/index.html", func(w http.ResponseWriter, req *http.Request) {
+	mux.HandleFunc("/api/", app.handleApi)
+	mux.HandleFunc("/version", app.handleVersion)
+	mux.HandleFunc("/index.html", func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Add("Content-Type", "text/html;krumpli=9")
 		fmt.Fprintln(w, "<h2>todo ...</h2>")
 	})
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":8888", nil)
+	mux.Handle("/metrics", promhttp.Handler())
 
+	http.ListenAndServe(":8888", mux)
 }
