@@ -42,3 +42,17 @@ services:
     labels:
     - "traefik.frontend.rule=Host:prom.${DOMAIN:-lvh.me}"
     - "traefik.port=9090"
+
+  grafana:
+    image: grafana/grafana:6.3.3
+    ports:
+      - 3000
+    environment:
+        GF_USERS_ALLOW_SIGN_UP: "false"
+        GF_AUTH_ANONYMOUS_ENABLED: "true"
+        GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+    volumes:
+        - ./config/grafana:/etc/grafana/provisioning/datasources
+    labels:
+    - "traefik.frontend.rule=Host:graf.${DOMAIN:-lvh.me}"
+    - "traefik.port=3000"
