@@ -13,6 +13,9 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	metrics "github.com/slok/go-http-metrics/metrics/prometheus"
+	"github.com/slok/go-http-metrics/middleware"
+	"github.com/slok/go-http-metrics/middleware/std"
 )
 
 type Book struct {
@@ -155,5 +158,10 @@ func main() {
 	})
 	mux.Handle("/metrics", promhttp.Handler())
 
-	http.ListenAndServe(":8888", mux)
+	mdlw := middleware.New(middleware.Config{
+		Recorder: metrics.NewRecorder(metrics.Config{}),
+	})
+
+	http.ListenAndServe(":8888", std.Handler("", mdlw, mux))
+
 }
