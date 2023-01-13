@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -19,8 +20,24 @@ type Book struct {
 	Author string
 }
 
+type metrics struct {
+	numOfBooks prometheus.Gauge
+}
+
+func NewMetrics() *metrics {
+	m := &metrics{
+		numOfBooks: prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "books_number",
+			Help: "Current number of Books.",
+		}),
+	}
+	prometheus.MustRegister(m.numOfBooks)
+	return m
+}
+
 type App struct {
 	repo Repository
+	met  *metrics
 }
 
 var Version = "0.1.0"
@@ -34,6 +51,8 @@ func (a *App) handleVersion(w http.ResponseWriter, req *http.Request) {
 }
 
 func (a *App) handleListBook(w http.ResponseWriter, req *http.Request) {
+	// fake change
+	a.met.numOfBooks.Dec()
 	books := a.repo.findAllBooks()
 	list := []Book{}
 	for _, b := range books {
@@ -44,6 +63,8 @@ func (a *App) handleListBook(w http.ResponseWriter, req *http.Request) {
 }
 
 func (a *App) handleGetBook(w http.ResponseWriter, req *http.Request) {
+	// fake change
+	a.met.numOfBooks.Inc()
 	url := req.URL.Path
 	name := strings.TrimPrefix(url, "/api/books/")
 	log.Println("GetBook name:", name)
@@ -113,7 +134,9 @@ func main() {
 	r := NewInMemoryRepo()
 	app := &App{
 		repo: r,
+		met:  NewMetrics(),
 	}
+	app.met.numOfBooks.Set(float64(len(app.repo.findAllBooks())))
 
 	http.HandleFunc("/api/books", app.handleListBook) // GET list books
 	http.HandleFunc("/api/books/", app.handleGetBook) // GET list books
