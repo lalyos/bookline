@@ -13,10 +13,13 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 type Book struct {
-	ID     uint
+	//ID     uint `gorm:"primary_key"`
+	gorm.Model
 	Title  string
 	Author string
 }
@@ -119,6 +122,32 @@ func (a *App) handleSearchByTitle(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+type DBRepo struct {
+	DB *gorm.DB
+}
+
+func (r *DBRepo) ConnectDatabase() {
+	database, err := gorm.Open(sqlite.Open("books.db"), &gorm.Config{})
+	if err != nil {
+		panic("Failed to connect to database!")
+	}
+
+	database.AutoMigrate(&Book{})
+	r.DB = database
+}
+
+func (r *DBRepo) findAllBooks() map[uint]Book {
+	ret := map[uint]Book{}
+
+	var books []Book
+	r.DB.Find(&books)
+	for _, b := range books {
+		ret[b.ID] = b
+	}
+
+	return ret
+}
+
 type Repository interface {
 	findAllBooks() map[uint]Book
 }
@@ -135,8 +164,8 @@ func (r *InMemoryRepo) findAllBooks() map[uint]Book {
 func NewInMemoryRepo() *InMemoryRepo {
 	return &InMemoryRepo{
 		books: map[uint]Book{
-			1: {1, "War and Peace", "Tolsztoj"},
-			2: {2, "Harry Potter I", "J.K."},
+			1: {Title: "War and Peace", Author: "Tolsztoj"},
+			2: {Title: "Harry Potter I", Author: "J.K."},
 		},
 	}
 }
@@ -145,6 +174,7 @@ func NewInMemoryRepo() *InMemoryRepo {
 func logging(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.URL.Path)
+
 		f(w, r)
 	}
 }
@@ -157,9 +187,21 @@ func main() {
 		os.Exit(0)
 	}
 
-	r := NewInMemoryRepo()
+	db := DBRepo{}
+	db.ConnectDatabase()
+	// db.DB.Create(&Book{Author: "Tolsztoj", Title: "War and Peace"})
+	// db.DB.Create(&Book{Author: "J.K.", Title: "Harry Potter I"})
+	// db.DB.Create(&Book{Author: "Jozsef", Title: "Bible"})
+
+	// books := []Book{}
+	// db.DB.Find(&books)
+	// fmt.Println("books", books)
+	// os.Exit(0)
+
+	// r := NewInMemoryRepo()
 	app := &App{
-		repo: r,
+		// repo: r,
+		repo: &db,
 		met:  NewMetrics(),
 	}
 	app.met.numOfBooks.Set(float64(len(app.repo.findAllBooks())))
