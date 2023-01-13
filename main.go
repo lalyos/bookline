@@ -16,6 +16,7 @@ import (
 )
 
 type Book struct {
+	ID     uint
 	Title  string
 	Author string
 }
@@ -66,21 +67,39 @@ func (a *App) handleGetBook(w http.ResponseWriter, req *http.Request) {
 	// fake change
 	a.met.numOfBooks.Inc()
 	url := req.URL.Path
-	name := strings.TrimPrefix(url, "/api/books/")
-	log.Println("GetBook name:", name)
+	id := strings.TrimPrefix(url, "/api/books/")
+	log.Println("GetBook ID:", id)
 	m := a.repo.findAllBooks()
 
-	if b, ok := m[name]; ok {
+	var idx uint
+	fmt.Sscanf(id, "%d", &idx)
+	if b, ok := m[idx]; ok {
+		data, _ := json.Marshal(b)
+		fmt.Fprintln(w, string(data))
+	} else {
+		fmt.Fprintln(w, "[]")
+	}
+}
+
+func (a *App) handleSearchByTitle(w http.ResponseWriter, req *http.Request) {
+	url := req.URL.Path
+	name := strings.TrimPrefix(url, "/api/search/")
+	log.Println("GetBook name:", name)
+	books := a.repo.findAllBooks()
+
+	titles := []string{}
+	byTitle := map[string]Book{}
+	for _, b := range books {
+		titles = append(titles, b.Title)
+		byTitle[b.Title] = b
+	}
+
+	if b, ok := byTitle[name]; ok {
 		data, _ := json.Marshal(b)
 		fmt.Fprintln(w, string(data))
 	} else {
 		if req.URL.Query().Has("fuzzy") {
 			log.Println("fuzzy search")
-			titles := []string{}
-			for _, b := range m {
-				titles = append(titles, b.Title)
-			}
-			log.Printf("titles:%#v \n", titles)
 
 			// matches := fuzzy.Find(name, titles)
 			matches := fuzzy.RankFindFold(name, titles)
@@ -89,7 +108,7 @@ func (a *App) handleGetBook(w http.ResponseWriter, req *http.Request) {
 			log.Println("fuzzy matches:", matches)
 
 			if len(matches) > 0 {
-				b := m[matches[0].Target]
+				b := byTitle[matches[0].Target]
 				data, _ := json.Marshal(b)
 				fmt.Fprintln(w, string(data))
 				return
@@ -98,27 +117,26 @@ func (a *App) handleGetBook(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintln(w, "[]")
 
 	}
-
 }
 
 type Repository interface {
-	findAllBooks() map[string]Book
+	findAllBooks() map[uint]Book
 }
 
 type InMemoryRepo struct {
-	books map[string]Book
+	books map[uint]Book
 }
 
-func (r *InMemoryRepo) findAllBooks() map[string]Book {
+func (r *InMemoryRepo) findAllBooks() map[uint]Book {
 	// mutex .....
 	return r.books
 }
 
 func NewInMemoryRepo() *InMemoryRepo {
 	return &InMemoryRepo{
-		books: map[string]Book{
-			"War and Peace":  {"War and Peace", "Tolsztoj"},
-			"Harry Potter I": {"Harry Potter I", "J.K."},
+		books: map[uint]Book{
+			1: {1, "War and Peace", "Tolsztoj"},
+			2: {2, "Harry Potter I", "J.K."},
 		},
 	}
 }
@@ -155,6 +173,7 @@ func main() {
 	// mux.HandleFunc("/api/authors", logging(app.handleApi)) //list authors
 	// mux.HandleFunc("/api/authors/ID", alogging(pp.handleApi)) //list authors
 
+	mux.HandleFunc("/api/search/", logging(app.handleSearchByTitle))
 	mux.HandleFunc("/api/", logging(app.handleApi))
 	mux.HandleFunc("/version", logging(app.handleVersion))
 	mux.HandleFunc("/index.html", func(w http.ResponseWriter, req *http.Request) {
